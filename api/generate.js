@@ -17,14 +17,13 @@ export default async function handler(req, res) {
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    const modelToUse = model || 'gemini-2.5-flash';
+    const modelToUse = model || 'gemini-3.8-flash';
 
     const response = await ai.models.generateContent({
       model: modelToUse,
       contents: prompt,
     });
 
-    // Format response to match your frontend parser structure
     return res.status(200).json({
       candidates: [
         {

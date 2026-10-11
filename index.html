@@ -429,7 +429,7 @@
                 const response = await fetch('/api/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt, model: 'gemini-3.8-flash' })
+                    body: JSON.stringify({ prompt })
                 });
 
                 if (!response.ok) {

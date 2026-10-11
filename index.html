@@ -396,7 +396,6 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
 
-            // Show back button everywhere except the intro screen
             const backBtn = document.getElementById('backBtn');
             if (backBtn) {
                 backBtn.style.display = (screenId === 'introScreen') ? 'none' : 'inline-block';
@@ -426,38 +425,22 @@
               "explanation": "Detailed step-by-step breakdown explaining why the correct answer is right and why others are incorrect."
             }`;
 
-            const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
-            let response = null;
-            let data = null;
-            let lastError = null;
-
-            for (const model of modelsToTry) {
-                try {
-                    response = await fetch('/api/generate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ prompt, model })
-                    });
-
-                    if (response.ok) {
-                        data = await response.json();
-                        break;
-                    } else {
-                        const errText = await response.text();
-                        lastError = `Model ${model} error: ${errText}`;
-                    }
-                } catch (err) {
-                    lastError = err.message;
-                }
-            }
-
             try {
-                if (!data || !data.candidates) {
-                    throw new Error(lastError || "Failed to generate question. Please try again.");
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, model: 'gemini-3.8-flash' })
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    throw new Error(errText || "Generation failed");
                 }
 
+                const data = await response.json();
                 const rawText = data.candidates[0].content.parts[0].text;
                 const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                
                 if (!jsonMatch) {
                     throw new Error("No JSON found in response: " + rawText);
                 }

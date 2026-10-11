@@ -1,6 +1,4 @@
-export const maxDuration = 60;
-
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -13,7 +11,6 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Missing GEMINI_API_KEY environment variable.' });
     }
 
-    // Direct, rock-solid connection using gemini-3.8-flash
     const apiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`,
       {
@@ -37,4 +34,4 @@ export default async function handler(req, res) {
     console.error('Generation error:', error);
     return res.status(500).json({ error: error.message || 'Failed to generate question.' });
   }
-}
+};

@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { prompt, model } = req.body;
+    const { prompt } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
@@ -17,10 +17,10 @@ export default async function handler(req, res) {
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    const modelToUse = model || 'gemini-3.8-flash';
 
+    // Directly use gemini-2.0-flash without any looping
     const response = await ai.models.generateContent({
-      model: modelToUse,
+      model: 'gemini-2.0-flash',
       contents: prompt,
     });
 
@@ -39,5 +39,3 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Generation error:', error);
     return res.status(500).json({ error: error.message || 'Failed to generate question.' });
-  }
-}

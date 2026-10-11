@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 
-// Extend Vercel function execution timeout limit so hard math questions don't time out
+// Extend Vercel function timeout to 60 seconds so hard questions never time out
 export const maxDuration = 60;
 
 export default async function handler(req, res) {
@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { difficulty, domain } = req.body;
+    const { prompt, model } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
@@ -17,28 +17,28 @@ export default async function handler(req, res) {
     }
 
     const ai = new GoogleGenAI({ apiKey });
-
-    const prompt = `Generate a ${difficulty} level Digital SAT Math question focused on${domain || 'Algebra & Advanced Math'}.
-    CRITICAL REQUIREMENT: Output strictly in valid JSON format with no markdown blocks (no \`\`\`json) and NO LaTeX symbols (use plain text symbols like ^ for exponents, sqrt() for square roots, x2 instead of x squared formatting).
-    JSON structure required:
-    {
-      "question": "The question text here...",
-      "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
-      "answer": "A",
-      "explanation": "Step by step plain-text explanation..."
-    }`;
+    const modelToUse = model || 'gemini-2.5-flash';
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: modelToUse,
       contents: prompt,
     });
 
-    let textResponse = response.text.trim();
-    textResponse = textResponse.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '');
-
-    const questionData = JSON.parse(textResponse);
-    return res.status(200).json(questionData);
+    // Format response to match your frontend parser structure
+    return res.status(200).json({
+      candidates: [
+        {
+          content: {
+            parts: [
+              { text: response.text }
+            ]
+          }
+        }
+      ]
+    });
 
   } catch (error) {
     console.error('Generation error:', error);
-    return res.status(500).json({ error: 'Failed to generate question. Please try again.' });
+    return res.status(500).json({ error: error.message || 'Failed to generate question.' });
+  }
+}

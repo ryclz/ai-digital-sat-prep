@@ -1,6 +1,3 @@
-import { GoogleGenAI } from '@google/genai';
-
-// Extend Vercel function timeout to 60 seconds so hard questions never time out
 export const maxDuration = 60;
 
 export default async function handler(req, res) {
@@ -16,25 +13,25 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Missing GEMINI_API_KEY environment variable.' });
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    // Direct, rock-solid connection using gemini-3.8-flash
+    const apiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      }
+    );
 
-    // Hardcoded to gemini-3.8-flash to match your API key permissions perfectly
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: prompt,
-    });
+    if (!apiResponse.ok) {
+      const errText = await apiResponse.text();
+      return res.status(apiResponse.status).json({ error: errText });
+    }
 
-    return res.status(200).json({
-      candidates: [
-        {
-          content: {
-            parts: [
-              { text: response.text }
-            ]
-          }
-        }
-      ]
-    });
+    const data = await apiResponse.json();
+    return res.status(200).json(data);
 
   } catch (error) {
     console.error('Generation error:', error);
